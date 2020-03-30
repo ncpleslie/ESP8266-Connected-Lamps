@@ -17,6 +17,7 @@ class Database {
         String _firebaseAuth;
         String _firebaseHost;
         bool _swState = false;
+        String _path = "/node_state";
 
         void _setCredentials(String auth, String host);
         void _connectToDatabase();
@@ -25,8 +26,8 @@ class Database {
         
     public:
         Database(String auth, String host, String thisNode, String partnerNode);
-        void setDatabaseRecord(bool state);
-        bool getDatabaseRecord();
+        bool setCurrentNodeRecord(bool state);
+        bool getPartnerNodeRecord();
 };
 
 #endif

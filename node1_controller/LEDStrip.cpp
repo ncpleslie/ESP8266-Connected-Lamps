@@ -69,19 +69,19 @@ void LEDStrip::_colorWipe(uint32_t color, int wait) {
   }
 }
 
-void LEDStrip::_breath() {
+void LEDStrip::_breath(uint32_t color) {
   for (int i = 0; i <= 255; i++) {
-    strip.fill(strip.Color(i, 0, 0));
+    strip.fill(color);
     strip.show();
   }
   for (int i = 255; i >= 0; i--) {
-    strip.fill(strip.Color(i, 0, 0));
+    strip.fill(color);
     strip.show();
   }
 }
 
 void LEDStrip::_heartbeat() {
-  for (int i = 0; i <= 10; i++) {
+  for (int i = 0; i <= 2; i++) {
     strip.fill(RED);
     strip.show();
     delay(50);
@@ -103,4 +103,12 @@ void LEDStrip::_flash() {
     strip.show();
     delay(10);
   }
+}
+
+void LEDStrip::error() {
+  this->_breath(RED);
+}
+
+void LEDStrip::waiting() {
+  this->_breath(CYAN);
 }

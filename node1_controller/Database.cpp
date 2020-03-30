@@ -33,11 +33,11 @@ void Database::_initDatabaseState() {
     Firebase.setBool(_firebaseData, _nodeName, _swState);
 }
 
-void Database::setDatabaseRecord(bool state) {
-    Firebase.setBool(_firebaseData, _nodeName, state);
+bool Database::setCurrentNodeRecord(bool state) {
+    return Firebase.setBool(_firebaseData, _nodeName + _path, state);
 }
 
-bool Database::getDatabaseRecord() {
-    Firebase.getBool(_firebaseData, _partnerNodeName);
+bool Database::getPartnerNodeRecord() {
+    Firebase.getBool(_firebaseData, _partnerNodeName + _path);
     return _firebaseData.boolData();
 }

@@ -26,10 +26,10 @@ String FIREBASE_HOST = "";
 String FIREBASE_AUTH = "";
 
 // Name of the field that this device alters on Firebase
-String nodeName = "LED_STATUS_Node1";
+String NODE_NAME = "Node1";
 // Name of the field that this device checks to see if it should turn on the LEDs
-String partnerNodeName = "LED_STATUS_Node2";
-Database db(FIREBASE_AUTH, FIREBASE_HOST, nodeName, partnerNodeName);
+String PARTNER_NODE_NAME = "Node2";
+Database db(FIREBASE_AUTH, FIREBASE_HOST, NODE_NAME, PARTNER_NODE_NAME);
 
 // LED Pin and total LED count
 uint16_t LED_PIN = D1;
@@ -44,6 +44,10 @@ LEDStrip lamp(LED_COUNT, LED_PIN, INTERNAL_LED, INTERNAL_LED_PIN);
 int BTN_PIN = 4;
 Button btn(BTN_PIN);
 
+// Recheck DB interval
+int INTERVAL = 1000;
+unsigned long time_now = 0;
+
 void setup()
 {
   Serial.begin(BAUDRATE);
@@ -52,8 +56,14 @@ void setup()
 
 void loop()
 {
+  checkWifiStatus();
   handleButtonEvent();
-  handleLampEvent();
+  Serial.println("Loop");
+  if (millis() > time_now + INTERVAL) {
+    Serial.println("1");
+    time_now = millis();
+    handleLampEvent();
+  }
 }
 
 //
@@ -61,10 +71,9 @@ void loop()
 //
 void handleButtonEvent() {
   // If button push
-  if (btn.isPushed()) {
-    lamp.enableSingleLED();
-    db.setDatabaseRecord(true);
+  if (btn.isPushed() && db.setCurrentNodeRecord(true)) {
     reset_btn_state = true;
+    lamp.enableSingleLED();
     delay(1000);
   }
 
@@ -73,25 +82,35 @@ void handleButtonEvent() {
   if (!btn.isPushed() && reset_btn_state) {
     reset_btn_state = false;
     lamp.disableLED();
-    db.setDatabaseRecord(false);
-    delay(1000);
+    db.setCurrentNodeRecord(false);
   }
 }
 
 // Turn on the ring/strip when the other user pushes their button
 void handleLampEvent() {
   // For LED Ring
-  if (db.getDatabaseRecord()) {
+  if (db.getPartnerNodeRecord()) {
     lamp.enableFullLED();
-  } else if (!db.getDatabaseRecord()) {
-    lamp.disableLED();
+  }
+  lamp.disableLED();
+}
+
+void checkWifiStatus() {
+  while (WiFi.status() != WL_CONNECTED) {
+    lamp.error();
+    delay(5000);
   }
 }
 
 void startWifiManager() {
   // Wifi manager will connect to a pre-existing WIFI network
-  // If no WIFI network is found the device will become an AP to set/found a new WIFI network
+  // If no WIFI network is found the device will become an AP to set/find a new WIFI network
   WiFiManager wifiManager;
-  //first parameter is name of access point, second is the password
+  wifiManager.setAPCallback(configModeCallback);
   wifiManager.autoConnect(AP_NAME);
+}
+
+void configModeCallback (WiFiManager *myWiFiManager) {
+  lamp.waiting();
+  delay(5000);
 }

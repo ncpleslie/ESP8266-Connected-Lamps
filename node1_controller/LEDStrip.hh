@@ -31,7 +31,7 @@ class LEDStrip {
     void _initLEDStrip(uint16_t ledCount, uint16_t pin);
     void _colorWipe(uint32_t color, int wait);
     void _heartbeat();
-    void _breath();
+    void _breath(uint32_t color);
     void _flash();
 
   public:
@@ -39,6 +39,8 @@ class LEDStrip {
     void enableSingleLED();
     void enableFullLED();
     void disableLED();
+    void error();
+    void waiting();
 };
 
 #endif
