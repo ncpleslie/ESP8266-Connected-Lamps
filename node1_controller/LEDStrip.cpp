@@ -14,6 +14,7 @@ LEDStrip::LEDStrip(uint16_t ledCount, uint16_t pin, bool internalPresent, uint8_
   PURPLE = strip.Color(255, 0, 255);
   CYAN = strip.Color(0, 255, 255);
   WHITE = strip.Color(255, 255, 255);
+  ORANGE = strip.Color(255, 165, 0);
   _internalLED = internalPresent;
   _internalPin = internalPin;
 }
@@ -35,18 +36,64 @@ void LEDStrip::enableSingleLED() {
   if (_internalLED) {
     digitalWrite(_internalPin, HIGH);
   }
-  strip.setPixelColor(2, strip.Color(255, 0, 0));
-  strip.setPixelColor(3, strip.Color(255, 0, 0));
+  strip.setPixelColor(2, GREEN);
+  strip.setPixelColor(3, GREEN);
   strip.show();
   delay(50);
 }
 
 void LEDStrip::enableFullLED() {
   // Turn on a random LED sequence
-  _heartbeat();
-  //  _colorWipe(RED, 50);
-  //  _colorWipe(GREEN, 50);
-  //  _colorWipe(BLUE, 50);
+  byte numOfLightEffects = 11;
+  byte randNum = random(0, numOfLightEffects + 1);
+  if (randNum == 0) {
+    _heartbeat();
+  }
+  if (randNum == 1) {
+    _colorWipe(RED, 50);
+  }
+  if (randNum == 2) {
+    _colorWipe(RED, 50);
+    _colorWipe(GREEN, 50);
+    _colorWipe(BLUE, 50);
+  }
+  if (randNum == 3) {
+    _breath();
+  }
+  if (randNum == 4) {
+    _heartbeat();
+  }
+  if (randNum == 5) {
+    _flash();
+  }
+  if (randNum == 6) {
+    _rainbow(10);
+  }
+  if (randNum == 7) {
+    _theaterChaseRainbow(20);
+  }
+  if (randNum == 8) {
+    _theaterChase(PURPLE, 20);
+  }
+  if (randNum == 9) {
+    _theaterChase(WHITE, 20);
+  }
+  if (randNum == 10) {
+    _theaterChase(CYAN, 20);
+  }
+  if (randNum == 11) {
+    _theaterChase(WHITE, 20);
+    _theaterChase(CYAN, 20);
+    _theaterChase(BLUE, 20);
+    _theaterChase(PURPLE, 20);
+    _theaterChase(RED, 20);
+    _theaterChase(ORANGE, 20);
+    _theaterChase(YELLOW, 20);
+    _theaterChase(GREEN, 20);
+  }
+  if (randNum == 12) {
+    _colorWipe(ORANGE, 50);
+  }
 }
 
 void LEDStrip::disableLED() {
@@ -57,31 +104,59 @@ void LEDStrip::disableLED() {
   strip.show();
 }
 
+void LEDStrip::error() {
+  for (byte i = 0; i <= 255; i++) {
+    strip.fill(strip.Color(i, 0, 0));
+    strip.show();
+  }
+  for (byte i = 255; i >= 0; i--) {
+    strip.fill(strip.Color(i, 0, 0));
+    strip.show();
+  }
+}
+
+void LEDStrip::waiting() {
+  for (byte i = 0; i <= 255; i++) {
+    strip.fill(strip.Color(0, i, i));
+    strip.show();
+  }
+  for (byte i = 255; i >= 0; i--) {
+    strip.fill(strip.Color(0, i, i));
+    strip.show();
+  }
+}
+
+void LEDStrip::success() {
+  this->_colorWipe(GREEN, 50);
+}
+
 void LEDStrip::_colorWipe(uint32_t color, int wait) {
   //  For each pixel in strip...
   //  Set pixel's color (in RAM)
   //  Update strip to match
   //  Pause for a moment
-  for (int i = 0; i < strip.numPixels(); i++) {
+  for (byte i = 0; i < strip.numPixels(); i++) {
     strip.setPixelColor(i, color);
     strip.show();
     delay(wait);
   }
 }
 
-void LEDStrip::_breath(uint32_t color) {
-  for (int i = 0; i <= 255; i++) {
-    strip.fill(color);
+void LEDStrip::_breath() {
+  for (byte i = 0; i < strip.numPixels(); i++) {
+    strip.setPixelColor(i, strip.Color(0, 0, i * 10));
     strip.show();
+    delay(50);
   }
-  for (int i = 255; i >= 0; i--) {
-    strip.fill(color);
+  for (byte i = strip.numPixels() - 1; i > 0; i--) {
+    strip.setPixelColor(i, strip.Color(0, 0, i * 10));
     strip.show();
+    delay(50);
   }
 }
 
 void LEDStrip::_heartbeat() {
-  for (int i = 0; i <= 2; i++) {
+  for (byte i = 0; i <= 2; i++) {
     strip.fill(RED);
     strip.show();
     delay(50);
@@ -93,22 +168,82 @@ void LEDStrip::_heartbeat() {
     delay(50);
     strip.clear();
     strip.show();
-    delay(2000);
   }
 }
 
 void LEDStrip::_flash() {
-  for (int i = 0; i <= 10; i++) {
+  for (byte i = 0; i <= 10; i++) {
     strip.fill(BLUE);
     strip.show();
-    delay(10);
+    delay(100);
   }
 }
 
-void LEDStrip::error() {
-  this->_breath(RED);
+
+void LEDStrip::_rainbow(int wait) {
+  // Hue of first pixel runs 5 complete loops through the color wheel.
+  // Color wheel has a range of 65536 but it's OK if we roll over, so
+  // just count from 0 to 5*65536. Adding 256 to firstPixelHue each time
+  // means we'll make 5*65536/256 = 1280 passes through this outer loop:
+  for (long firstPixelHue = 0; firstPixelHue < 5 * 65536; firstPixelHue += 256)
+  {
+    for (int i = 0; i < strip.numPixels(); i++)
+    { // For each pixel in strip...
+      // Offset pixel hue by an amount to make one full revolution of the
+      // color wheel (range of 65536) along the length of the strip
+      // (strip.numPixels() steps):
+      int pixelHue = firstPixelHue + (i * 65536L / strip.numPixels());
+      // strip.ColorHSV() can take 1 or 3 arguments: a hue (0 to 65535) or
+      // optionally add saturation and value (brightness) (each 0 to 255).
+      // Here we're using just the single-argument hue variant. The result
+      // is passed through strip.gamma32() to provide 'truer' colors
+      // before assigning to each pixel:
+      strip.setPixelColor(i, strip.gamma32(strip.ColorHSV(pixelHue)));
+    }
+    strip.show(); // Update strip with new contents
+    delay(wait);  // Pause for a moment
+  }
 }
 
-void LEDStrip::waiting() {
-  this->_breath(CYAN);
+void LEDStrip::_theaterChase(uint32_t color, int wait)
+{
+  for (int a = 0; a < 10; a++)
+  { // Repeat 10 times...
+    for (int b = 0; b < 3; b++)
+    { //  'b' counts from 0 to 2...
+      strip.clear(); //   Set all pixels in RAM to 0 (off)
+      // 'c' counts up from 'b' to end of strip in steps of 3...
+      for (int c = b; c < strip.numPixels(); c += 3)
+      {
+        strip.setPixelColor(c, color); // Set pixel 'c' to value 'color'
+      }
+      strip.show(); // Update strip with new contents
+      delay(wait);  // Pause for a moment
+    }
+  }
+}
+
+void LEDStrip::_theaterChaseRainbow(int wait)
+{
+  int firstPixelHue = 0; // First pixel starts at red (hue 0)
+  for (int a = 0; a < 30; a++)
+  { // Repeat 30 times...
+    for (int b = 0; b < 3; b++)
+    { //  'b' counts from 0 to 2...
+      strip.clear(); //   Set all pixels in RAM to 0 (off)
+      // 'c' counts up from 'b' to end of strip in increments of 3...
+      for (int c = b; c < strip.numPixels(); c += 3)
+      {
+        // hue of pixel 'c' is offset by an amount to make one full
+        // revolution of the color wheel (range 65536) along the length
+        // of the strip (strip.numPixels() steps):
+        int hue = firstPixelHue + c * 65536L / strip.numPixels();
+        uint32_t color = strip.gamma32(strip.ColorHSV(hue)); // hue -> RGB
+        strip.setPixelColor(c, color);                       // Set pixel 'c' to value 'color'
+      }
+      strip.show();                // Update strip with new contents
+      delay(wait);                 // Pause for a moment
+      firstPixelHue += 65536 / 90; // One cycle of color wheel over 90 frames
+    }
+  }
 }

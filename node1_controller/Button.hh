@@ -10,9 +10,9 @@
 
 class Button {
     private:
-        int _pin;
+        byte _pin;
     public:
-        Button(int pin);
+        Button(byte pin);
         bool isPushed();
 };
 

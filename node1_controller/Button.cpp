@@ -5,13 +5,13 @@
 
 #include "Button.hh"
 
-Button::Button(int pinNum) {
+Button::Button(byte pinNum) {
     this->_pin = pinNum;
     pinMode(this->_pin, INPUT);
 }
 
 bool Button::isPushed() {
-    int btn_state = digitalRead(this->_pin);
+    byte btn_state = digitalRead(this->_pin);
     if (btn_state == HIGH) {
         return true;
     }

@@ -22,12 +22,14 @@ class Database {
         void _setCredentials(String auth, String host);
         void _connectToDatabase();
         void _setNodeNames(String thisNode, String partnerNode);
-        void _initDatabaseState();
+        
         
     public:
         Database(String auth, String host, String thisNode, String partnerNode);
+        void resetNodeState();
         bool setCurrentNodeRecord(bool state);
         bool getPartnerNodeRecord();
+        int getConfig();
 };
 
 #endif
