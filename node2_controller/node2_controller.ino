@@ -1,6 +1,6 @@
 /*
    Version: 0.5
-   Boardtype: LOLIN(WEMOS) D1 R2 & Mini
+   Boardtype: NodeMCU 1.0 (ESP-12E Module)
 
    ESP8266 Long Distance Lamp - For connecting couples with a reminder that their partner is thinking about them
    Touch your lamp and activate your partner's lamp with random light up reminders
@@ -37,9 +37,9 @@ String FIREBASE_HOST = "<firebase>.firebaseio.com";
 String FIREBASE_AUTH = "<firebaseauthkey>";
 
 // Name of the field that this device alters on Firebase
-String NODE_NAME = "Node1";
+String NODE_NAME = "Node2";
 // Name of the field that this device checks to see if it should turn on the LEDs
-String PARTNER_NODE_NAME = "Node2";
+String PARTNER_NODE_NAME = "Node1";
 
 // ----------------------- CHANGE INFORMATION IF BOARD LAYOUT IS DIFFERENT ---
 
@@ -140,7 +140,7 @@ void startWifiManager() {
   WiFiManager wifiManager;
   wifiManager.setAPCallback(configModeCallback);
   wifiManager.autoConnect(AP_NAME);
-  // wifiManager.resetSettings();
+  //wifiManager.resetSettings();
 }
 
 void configModeCallback (WiFiManager *myWiFiManager) {
