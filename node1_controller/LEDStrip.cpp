@@ -44,55 +44,62 @@ void LEDStrip::enableSingleLED() {
 
 void LEDStrip::enableFullLED() {
   // Turn on a random LED sequence
-  byte numOfLightEffects = 11;
+  byte numOfLightEffects = 12;
   byte randNum = random(0, numOfLightEffects + 1);
-  if (randNum == 0) {
-    _heartbeat();
-  }
-  if (randNum == 1) {
-    _colorWipe(RED, 50);
-  }
-  if (randNum == 2) {
-    _colorWipe(RED, 50);
-    _colorWipe(GREEN, 50);
-    _colorWipe(BLUE, 50);
-  }
-  if (randNum == 3) {
-    _breath();
-  }
-  if (randNum == 4) {
-    _heartbeat();
-  }
-  if (randNum == 5) {
-    _flash();
-  }
-  if (randNum == 6) {
-    _rainbow(10);
-  }
-  if (randNum == 7) {
-    _theaterChaseRainbow(20);
-  }
-  if (randNum == 8) {
-    _theaterChase(PURPLE, 20);
-  }
-  if (randNum == 9) {
-    _theaterChase(WHITE, 20);
-  }
-  if (randNum == 10) {
-    _theaterChase(CYAN, 20);
-  }
-  if (randNum == 11) {
-    _theaterChase(WHITE, 20);
-    _theaterChase(CYAN, 20);
-    _theaterChase(BLUE, 20);
-    _theaterChase(PURPLE, 20);
-    _theaterChase(RED, 20);
-    _theaterChase(ORANGE, 20);
-    _theaterChase(YELLOW, 20);
-    _theaterChase(GREEN, 20);
-  }
-  if (randNum == 12) {
-    _colorWipe(ORANGE, 50);
+  Serial.println(randNum);
+
+  switch (randNum) {
+    case 0:
+      _heartbeat();
+      break;
+    case 1:
+      _colorWipe(RED, 50);
+      break;
+    case 2:
+      _colorWipe(RED, 50);
+      _colorWipe(GREEN, 50);
+      _colorWipe(BLUE, 50);
+      break;
+    case 3:
+      _breath();
+      break;
+    case 4:
+      _heartbeat();
+      break;
+    case 5:
+      _flash();
+      break;
+    case 6:
+      _rainbow(10);
+      break;
+    case 7:
+      _theaterChaseRainbow(20);
+      break;
+    case 8:
+      _theaterChase(PURPLE, 20);
+      break;
+    case 9:
+      _theaterChase(WHITE, 20);
+      break;
+    case 10:
+      _theaterChase(CYAN, 20);
+      break;
+    case 11:
+      _theaterChase(WHITE, 20);
+      _theaterChase(CYAN, 20);
+      _theaterChase(BLUE, 20);
+      _theaterChase(PURPLE, 20);
+      _theaterChase(RED, 20);
+      _theaterChase(ORANGE, 20);
+      _theaterChase(YELLOW, 20);
+      _theaterChase(GREEN, 20);
+      break;
+    case 12:
+      _colorWipe(ORANGE, 50);
+      break;
+    default:
+      _colorWipe(ORANGE, 50);
+      break;
   }
 }
 

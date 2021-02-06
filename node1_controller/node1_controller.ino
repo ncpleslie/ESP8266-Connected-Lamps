@@ -29,13 +29,14 @@
 // Access Point information
 // Will be displayed when the user initially starts the device
 // or if the device is unable to connect to a known WIFI network
-#define AP_NAME "AP Name"
+#define AP_NAME "My Wifi Lamp"
 
 // FIREBASE RTDB Information
 // Add firebase information here
-String FIREBASE_HOST = "<firebase>.firebaseio.com";
-String FIREBASE_AUTH = "<firebaseauthkey>";
+String FIREBASE_HOST = "<firebase-name>.firebaseio.com";
+String FIREBASE_AUTH = "<database-secret>";
 
+// Swap these fields for each lamp.
 // Name of the field that this device alters on Firebase
 String NODE_NAME = "Node1";
 // Name of the field that this device checks to see if it should turn on the LEDs
@@ -58,11 +59,17 @@ byte BTN_PIN = 4;
 Database db(FIREBASE_AUTH, FIREBASE_HOST, NODE_NAME, PARTNER_NODE_NAME);
 LEDStrip lamp(LED_COUNT, LED_PIN, INTERNAL_LED, INTERNAL_LED_PIN);
 Button btn(BTN_PIN);
+WiFiManager wifiManager;
 
 // Recheck DB interval
-int INTERVAL = 1000;
-unsigned long time_now = 0;
-int UPDATE_INTERVAL = 60000;
+int INTERVAL                = 1000;
+int RESET_INTERVAL          = 10000;
+int UPDATE_INTERVAL         = 60000;
+unsigned long main_timer    = 0;
+unsigned long config_timer  = 0;
+unsigned long button_timer  = 0;
+unsigned long button_pressed_timer = 0;
+
 // Board Information
 int BAUDRATE = 9600;
 bool reset_btn_state = false;
@@ -80,24 +87,38 @@ void loop()
 {
   checkWifiStatus();
   handleButtonEvent();
-  if (millis() > time_now + INTERVAL) {
-    time_now = millis();
+  if (millis() >= main_timer + INTERVAL) {
+    main_timer = millis();
     handleLampEvent();
   }
 
   // Update DB polling rate, if needed
-  if (millis() > time_now + UPDATE_INTERVAL) {
-    time_now = millis();
+  if (millis() >= config_timer + UPDATE_INTERVAL) {
+    config_timer = millis();
     INTERVAL = db.getConfig();
   }
 }
 
-void handleButtonEvent() {
-  // When button pushed, updated DB to trigger other node lamp event
-  if (btn.isPushed() && db.setCurrentNodeRecord(true)) {
-    reset_btn_state = true;
-    lamp.enableSingleLED();
-    delay(1000);
+void handleButtonEvent()
+{
+  if (btn.isPushed()) {
+    // When button pushed, updated DB to trigger other node lamp event
+    if (db.setCurrentNodeRecord(true)) {
+      reset_btn_state = true;
+      lamp.enableSingleLED();
+      delay(1000);
+    }
+
+    // If button pressed for x seconds
+    // reset the AP state
+    if (button_pressed_timer == 0) {
+      button_pressed_timer = millis();
+    }
+
+    if (millis() >= button_pressed_timer + button_timer + RESET_INTERVAL) {
+      button_timer = millis();
+      resetWifiConfig();
+    }
   }
 
   // If button released
@@ -106,6 +127,7 @@ void handleButtonEvent() {
     reset_btn_state = false;
     lamp.disableLED();
     db.setCurrentNodeRecord(false);
+    button_pressed_timer = 0;
   }
 }
 
@@ -125,8 +147,8 @@ void checkWifiStatus() {
     lamp.disableLED();
   }
   while (WiFi.status() != WL_CONNECTED || WiFi.status() == WL_CONNECTION_LOST || WiFi.status() == WL_DISCONNECTED || WiFi.status() == WL_CONNECT_FAILED || WiFi.status() == WL_IDLE_STATUS) {
-    if (millis() > time_now + INTERVAL) {
-      time_now = millis();
+    if (millis() > main_timer + INTERVAL) {
+      main_timer = millis();
       wifi_connected = false;
       lamp.error();
       lamp.disableLED();
@@ -137,16 +159,14 @@ void checkWifiStatus() {
 void startWifiManager() {
   // Wifi manager will connect to a pre-existing WIFI network
   // If no WIFI network is found the device will become an AP to set/find a new WIFI network
-  WiFiManager wifiManager;
-  wifiManager.setAPCallback(configModeCallback);
+
   wifiManager.autoConnect(AP_NAME);
-  // wifiManager.resetSettings();
 }
 
-void configModeCallback (WiFiManager *myWiFiManager) {
-  // When not connected to WIFI, the LED will pulse
-  if (millis() > time_now + INTERVAL) {
-    time_now = millis();
-    lamp.waiting();
-  }
+void resetWifiConfig() {
+  Serial.println("Resetting AP configuration");
+  delay(1000);
+  wifiManager.resetSettings();
+  lamp.waiting();
+  wifiManager.startConfigPortal(AP_NAME);
 }
